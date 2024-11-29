@@ -1,5 +1,10 @@
-const _hijack_main = () => {
+;(() => {
     'use strict'
+    globalThis.hijack ??= false
+    if (globalThis.hijack) {
+        return
+    }
+
     console.log('start hijack')
     // 拦截事件注册
     const rewrite = (name, obj) => {
@@ -63,69 +68,6 @@ const _hijack_main = () => {
         originalDocumentAddEventListener
     )
 
-    // 拦截全屏事件
-    let fullscr = {
-        get() {
-            return true
-        },
-    }
-
-    if ('fullScreen' in window) {
-        Object.defineProperty(window, 'fullScreen', fullscr)
-    }
-    Object.defineProperty(document, 'fullscreen', fullscr)
-    Object.defineProperty(document, 'fullscreenElement', {
-        get() {
-            return document.documentElement
-        },
-    })
-
-    const injectFullscrBtn = () => {
-        const observer = new MutationObserver(() => {
-            const ele = document.querySelector(
-                '.el-message-box__btns .el-button.el-button--default.el-button--small.el-button--primary'
-            )
-            if (!ele) return
-            if (
-                !(
-                    ele.innerHTML.includes('知道了') ||
-                    ele.innerHTML.includes('开始答题')
-                )
-            )
-                return
-            ele.addEventListener('click', () => {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen()
-                } else if (document.documentElement.mozRequestFullScreen) {
-                    document.documentElement.mozRequestFullScreen()
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen()
-                } else if (document.documentElement.msRequestFullscreen) {
-                    document.documentElement.msRequestFullscreen()
-                }
-            })
-            observer.disconnect()
-        })
-        observer.observe(document.documentElement, {
-            childList: true,
-            subtree: true,
-        })
-    }
-    if (window.location.href.includes('class_testPreview')) {
-        injectFullscrBtn()
-    } else {
-        const interval = setInterval(() => {
-            if (window.location.href.includes('class_testPreview')) {
-                injectFullscrBtn()
-                clearInterval(interval)
-            }
-        }, 500)
-    }
-}
-
-try {
-    _hijack_main()
     console.log('hijack success')
-} catch (e) {
-    console.error(e)
-}
+    globalThis.hijack = true
+})()
