@@ -55,19 +55,17 @@ async function f() {
             fs.readdirSync(addonsPath).forEach((file) => {
                 if (file.endsWith('.js')) {
                     const filePath = path.join(addonsPath, file)
-                    e.webContents
-                        .executeJavaScript(
-                            `
-                fetch('${filePath}')
-                    .then(response => response.text())
-                    .then(code => {
-                        eval(code);
-                    });
-              `
-                        )
-                        .catch((err) =>
-                            console.error(`加载脚本 ${file} 失败:`, err)
-                        )
+                    fs.readFile(filePath, {}, (err, data) => {
+                        if (err) {
+                            console.error('读取文件失败:', err)
+                        } else {
+                            e.webContents
+                                .executeJavaScript(data.toString())
+                                .catch((err) =>
+                                    console.error(`执行脚本 ${file} 失败:`, err)
+                                )
+                        }
+                    })
                 }
             })
         }
